@@ -1,4 +1,5 @@
-const CACHE_NAME = "fdc-cache-v1";
+// Bump this string on every deploy to force the old cache to be purged.
+const CACHE_NAME = "fdc-cache-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -20,22 +21,22 @@ self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Cache-first, falling back to network - works fully offline once visited.
+// NETWORK-FIRST: always try the live network so updates show up
+// immediately when online; fall back to the cache only when offline.
+// (The previous cache-first strategy was serving stale files forever.)
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
+    fetch(event.request)
+      .then(response => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         return response;
-      }).catch(() => cached);
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });

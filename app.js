@@ -663,7 +663,22 @@ function renderMatchHistory() {
 // ---------- PWA: register service worker for installability + offline ----------
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
+    navigator.serviceWorker.register("./sw.js").then(reg => {
+      // Check for a newer service worker every time the app opens.
+      reg.update();
+      reg.addEventListener("updatefound", () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener("statechange", () => {
+          // A new version has installed and there was already a controller
+          // (i.e. this is an update, not a first install) -> reload once so
+          // the user immediately sees the new version instead of stale files.
+          if (sw.state === "installed" && navigator.serviceWorker.controller) {
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(() => {});
   });
 }
 

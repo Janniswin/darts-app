@@ -532,16 +532,22 @@ body {
   .brand h1 { font-size: 0.8rem; }
   .brand-dot { width: 11px; height: 11px; }
 
+  /* Tabs fit the full width with no horizontal scroll (that scroll was
+     the "slider" showing up at the top). */
   .tabs {
     display: flex;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    gap: 5px;
-    padding-bottom: 2px;
-    justify-content: flex-start;
+    gap: 4px;
+    margin-top: 5px;
   }
-  .tab-btn { flex: 0 0 auto; padding: 6px 12px; font-size: 0.7rem; }
+  .tab-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 7px 4px;
+    font-size: 0.66rem;
+    letter-spacing: 0;
+    text-align: center;
+  }
 
   main {
     flex: 1 1 auto;
@@ -556,16 +562,25 @@ body {
   .view.active { display: flex; flex-direction: column; }
 
   /* Setup / Stats / Players: the panel itself scrolls internally so the
-     page never does. */
+     page never does. Scrollbars are hidden so no "slider" shows. */
   #view-setup.active, #view-stats.active, #view-players.active { overflow: hidden; }
   #view-setup .panel, #view-stats .panel, #view-players .panel {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    margin-top: 8px;
+    margin-top: 6px;
     padding: 14px;
   }
-  .panel h2 { font-size: 1rem; }
+  /* Hide scrollbars everywhere on mobile (still scrollable by touch). */
+  .panel::-webkit-scrollbar, .view::-webkit-scrollbar { display: none; }
+  .panel, .view { scrollbar-width: none; -ms-overflow-style: none; }
+  .panel h2 { font-size: 1rem; margin-bottom: 6px; }
+
+  /* Setup view fills the whole screen and lays its content out evenly so
+     there's no empty gap and no scrollbar. */
+  #view-setup .panel { display: flex; flex-direction: column; }
+  #view-setup .panel h3 { margin-top: 14px; margin-bottom: 8px; }
+  #view-setup #startMatchBtn { margin-top: auto; }
 
   .setup-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   select, input[type="text"], input[type="number"] { font-size: 0.95rem; padding: 10px 12px; }
@@ -634,7 +649,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 0;
-    font-size: 1.5rem;
+    font-size: 1.9rem;
     border-radius: 8px;
   }
 
