@@ -601,8 +601,6 @@ function handleCheckout(mp, turnScoreSoFar) {
   mp.remaining = 0;
   mp.out = true;
   match.legFinishOrder.push(mp.id);
-  announceScore(turnScoreSoFar);
-
   const isLegWinner = match.legFinishOrder.length === 1;
   if (isLegWinner) {
     mp.legsWon += 1; // live (scoreboard) leg count
