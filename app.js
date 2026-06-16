@@ -180,9 +180,28 @@ function speak(text, { pitch = 1.05, rate = 1.0 } = {}) {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+// ---------- Recorded voice clips ----------
+// Real announcer recordings (one per possible 3-dart turn total, plus a
+// win and a bust sound effect) live in voice/. We always prefer these over
+// the synthetic browser voice, falling back to speech only if a clip is
+// missing or fails to play (e.g. before the user has uploaded any audio).
+function playClip(name) {
+  const voiceOn = document.getElementById("voiceToggle").value === "on";
+  if (!voiceOn) return false;
+  try {
+    const audio = new Audio(`voice/${name}`);
+    const p = audio.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // Vary pitch/rate and add a little MC-style flair depending on how good
 // the throw was - makes the announcer feel alive instead of a flat readout.
 function announceScore(score) {
+  if (playClip(`score_${score}.m4a`)) return;
   if (score === 0) {
     speak(pick(["No score.", "Nothing there.", "Bad luck."]), { pitch: 0.85, rate: 0.95 });
   } else if (score === 180) {
@@ -198,12 +217,20 @@ function announceScore(score) {
   }
 }
 
+// Dedicated "overthrown" (bust) sound effect, separate from a plain 0 score.
+function announceBust() {
+  if (playClip("bust.m4a")) return;
+  speak(pick(["No score.", "Nothing there.", "Bad luck."]), { pitch: 0.85, rate: 0.95 });
+}
+
 function announceCheckout(playerName) {
+  playClip("win.m4a");
   speak(`Game shot! ${playerName} ${pick(["takes the leg!", "checks out! What a finish!", "wins the leg!"])}`,
     { pitch: 1.32, rate: 1.02 });
 }
 
 function announceMatchWin(playerName) {
+  playClip("win.m4a");
   speak(`Game, set and match! ${playerName} wins! Congratulations, well played!`, { pitch: 1.25, rate: 1.0 });
 }
 
@@ -652,7 +679,7 @@ function endTurn(mp, isBust, turnScoreSoFar) {
   if (isBust) {
     mp.currentLegTurns.push(0);
     match.legLog.push(`${mp.name}: turn voided (bust) - stays on ${mp.remaining}`);
-    announceScore(0);
+    announceBust();
   }
   endTurnCleanup();
 }
