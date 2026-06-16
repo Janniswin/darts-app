@@ -212,10 +212,14 @@ function switchView(view) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-" + view).classList.add("active");
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.view === view));
+  // Hide the big top bar during a match so the board uses the whole screen.
+  document.body.classList.toggle("in-game", view === "game");
   if (view === "stats") renderStats();
   if (view === "players") renderPlayerList();
   if (view === "setup") renderPlayerSelect();
 }
+
+document.getElementById("exitMatchBtn").addEventListener("click", () => switchView("setup"));
 
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => switchView(btn.dataset.view));

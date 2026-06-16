@@ -1,5 +1,5 @@
 // Bump this string on every deploy to force the old cache to be purged.
-const CACHE_NAME = "fdc-cache-v6";
+const CACHE_NAME = "fdc-cache-v7";
 const ASSETS = [
   "./",
   "./index.html",
