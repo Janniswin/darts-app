@@ -340,6 +340,21 @@ function buildNumberGrid() {
   bull.textContent = "25";
   bull.addEventListener("click", () => handleNumberClick(25));
   grid.appendChild(bull);
+
+  // Fuck (miss) and Undo sit right next to the 25 in the grid.
+  const miss = document.createElement("button");
+  miss.type = "button";
+  miss.className = "num-btn miss-cell";
+  miss.textContent = "FUCK";
+  miss.addEventListener("click", onMiss);
+  grid.appendChild(miss);
+
+  const undo = document.createElement("button");
+  undo.type = "button";
+  undo.className = "num-btn undo-cell";
+  undo.textContent = "Undo";
+  undo.addEventListener("click", onUndo);
+  grid.appendChild(undo);
 }
 
 document.querySelectorAll(".mod-btn").forEach(btn => {
@@ -369,12 +384,12 @@ function handleNumberClick(number) {
   resetModifier();
 }
 
-document.getElementById("missBtn").addEventListener("click", () => {
+function onMiss() {
   submitDart({ value: 0, label: "MISS", isDouble: false, isTriple: false, number: 0 });
   resetModifier();
-});
+}
 
-document.getElementById("undoBtn").addEventListener("click", () => {
+function onUndo() {
   if (!match || match.finished) return;
   if (match.undoStack.length === 0) {
     showToast("Nothing to undo in this leg.");
@@ -386,7 +401,7 @@ document.getElementById("undoBtn").addEventListener("click", () => {
   renderScoreboard();
   renderThrows();
   renderLegLog();
-});
+}
 
 // ---------- Undo snapshots (within the current leg) ----------
 // A snapshot captures every mutable bit of leg state so undo can step back
@@ -480,8 +495,7 @@ function renderScoreboard() {
       <div class="name">${escapeHtml(p.name)}</div>
       <div class="remaining">${p.remaining}</div>
       <div class="meta">
-        <div><strong>${avg}</strong>3-Dart Avg</div>
-        <div><strong>${p.legsWon}</strong>Legs</div>
+        <div><strong>${avg}</strong>Avg</div>
         <div><strong>${p.tripleCount}</strong>Triples</div>
       </div>
       <div class="legs-won">${pips}</div>

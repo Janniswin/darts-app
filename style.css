@@ -419,6 +419,19 @@ select:focus, input:focus { border-color: var(--gold); }
 .num-btn:hover { border-color: var(--gold); background: rgba(212,175,55,0.12); transform: translateY(-1px); }
 .num-btn:active { transform: translateY(0); }
 .num-btn.bull { grid-column: span 1; background: #1a0b0e; border-color: var(--board-red); }
+.num-btn.miss-cell {
+  background: linear-gradient(180deg, var(--board-red), var(--board-red-dark));
+  border-color: var(--board-red);
+  color: #fff;
+  font-size: 0.95rem;
+}
+.num-btn.undo-cell {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.25);
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+.num-btn.undo-cell:hover { color: var(--text); }
 
 .pad-actions {
   display: flex;
