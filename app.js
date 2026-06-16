@@ -53,45 +53,26 @@ function showToast(msg) {
 }
 
 // ---------- Voice ----------
-// The real recorded clips (voice/) cover every turn score plus win/bust, so
-// they handle almost everything. This minimal speechSynthesis fallback only
-// kicks in for the few announcements that have no recorded clip (e.g. the
-// 2nd/3rd place callouts) or if a clip fails to load - using whatever
-// default voice the device provides, no picker needed.
-let speechUnlocked = false;
-
-function unlockSpeech() {
-  if (speechUnlocked || !("speechSynthesis" in window)) return;
-  speechUnlocked = true;
-  const warmup = new SpeechSynthesisUtterance(" ");
-  warmup.volume = 0; // silent, just opens the audio channel
-  speechSynthesis.speak(warmup);
-}
-document.addEventListener("click", unlockSpeech, { once: true, capture: true });
-document.addEventListener("touchend", unlockSpeech, { once: true, capture: true });
-
-function speak(text, { pitch = 1.05, rate = 1.0 } = {}) {
-  const voiceOn = document.getElementById("voiceToggle").value === "on";
-  if (!voiceOn) return;
-  if (!("speechSynthesis" in window)) return;
-
-  // Must run synchronously (no setTimeout) so mobile browsers still treat
-  // this as part of the user gesture that triggered it.
-  if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "en-US";
-  utter.rate = rate;
-  utter.pitch = pitch;
-  speechSynthesis.speak(utter);
-}
-
+// Pure recorded-clip announcer - no synthetic/browser TTS voice anywhere.
+// If a clip is missing for a given moment, the app simply stays silent
+// rather than falling back to a robotic voice.
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// ---------- Recorded voice clips ----------
-// Real announcer recordings (one per possible 3-dart turn total, plus a
-// win and a bust sound effect) live in voice/. We always prefer these over
-// the synthetic browser voice, falling back to speech only if a clip is
-// missing or fails to play (e.g. before the user has uploaded any audio).
+// Short click tone played on every number button press.
+const _clickCtx = typeof AudioContext !== "undefined" ? new AudioContext() : null;
+function playClickTone() {
+  if (!_clickCtx) return;
+  const osc = _clickCtx.createOscillator();
+  const gain = _clickCtx.createGain();
+  osc.connect(gain);
+  gain.connect(_clickCtx.destination);
+  osc.frequency.value = 1000;
+  gain.gain.setValueAtTime(0.18, _clickCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, _clickCtx.currentTime + 0.06);
+  osc.start(_clickCtx.currentTime);
+  osc.stop(_clickCtx.currentTime + 0.06);
+}
+
 function playClip(name) {
   const voiceOn = document.getElementById("voiceToggle").value === "on";
   if (!voiceOn) return false;
@@ -105,40 +86,21 @@ function playClip(name) {
   }
 }
 
-// Vary pitch/rate and add a little MC-style flair depending on how good
-// the throw was - makes the announcer feel alive instead of a flat readout.
 function announceScore(score) {
-  if (playClip(`score_${score}.m4a`)) return;
-  if (score === 0) {
-    speak(pick(["No score.", "Nothing there.", "Bad luck."]), { pitch: 0.85, rate: 0.95 });
-  } else if (score === 180) {
-    speak("One hundred and eeeighty!", { pitch: 1.35, rate: 1.0 });
-  } else if (score >= 140) {
-    speak(`${score}! ${pick(["Excellent darts!", "Massive score!", "Big hit!"])}`, { pitch: 1.22, rate: 1.05 });
-  } else if (score >= 100) {
-    speak(`${score}! ${pick(["Ton plus!", "Nice one!", "Great darts!"])}`, { pitch: 1.14, rate: 1.0 });
-  } else if (score >= 60) {
-    speak(`${score}!`, { pitch: 1.06, rate: 1.0 });
-  } else {
-    speak(`${score}`, { pitch: 1.0, rate: 0.97 });
-  }
+  playClip(`score_${score}.m4a`);
 }
 
 // Dedicated "overthrown" (bust) sound effect, separate from a plain 0 score.
 function announceBust() {
-  if (playClip("bust.m4a")) return;
-  speak(pick(["No score.", "Nothing there.", "Bad luck."]), { pitch: 0.85, rate: 0.95 });
+  playClip("bust.m4a");
 }
 
 function announceCheckout(playerName) {
   playClip("win.m4a");
-  speak(`Game shot! ${playerName} ${pick(["takes the leg!", "checks out! What a finish!", "wins the leg!"])}`,
-    { pitch: 1.32, rate: 1.02 });
 }
 
 function announceMatchWin(playerName) {
   playClip("win.m4a");
-  speak(`Game, set and match! ${playerName} wins! Congratulations, well played!`, { pitch: 1.25, rate: 1.0 });
 }
 
 // ---------- Navigation ----------
@@ -265,14 +227,14 @@ function buildNumberGrid() {
     btn.type = "button";
     btn.className = "num-btn";
     btn.textContent = n;
-    btn.addEventListener("click", () => handleNumberClick(n));
+    btn.addEventListener("click", () => { playClickTone(); handleNumberClick(n); });
     grid.appendChild(btn);
   }
   const bull = document.createElement("button");
   bull.type = "button";
   bull.className = "num-btn bull";
   bull.textContent = "25";
-  bull.addEventListener("click", () => handleNumberClick(25));
+  bull.addEventListener("click", () => { playClickTone(); handleNumberClick(25); });
   grid.appendChild(bull);
 
   // Fuck (miss) and Undo sit right next to the 25 in the grid.
@@ -280,7 +242,7 @@ function buildNumberGrid() {
   miss.type = "button";
   miss.className = "num-btn miss-cell";
   miss.textContent = "FUCK";
-  miss.addEventListener("click", onMiss);
+  miss.addEventListener("click", () => { playClickTone(); onMiss(); });
   grid.appendChild(miss);
 
   const undo = document.createElement("button");
@@ -293,6 +255,7 @@ function buildNumberGrid() {
 
 document.querySelectorAll(".mod-btn").forEach(btn => {
   btn.addEventListener("click", () => {
+    playClickTone();
     currentModifier = btn.dataset.mod;
     document.querySelectorAll(".mod-btn").forEach(b => b.classList.toggle("active", b === btn));
   });
@@ -376,13 +339,22 @@ function pushUndo() {
 // ============================================================
 // GAME ENGINE (X01)
 // ============================================================
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function startMatch(playerIds, startScore, finishMode, legsBestOf) {
+  const shuffledIds = shuffle(playerIds.slice());
   match = {
     startScore,
     finishMode,
     legsBestOf,
     legsToWin: Math.ceil(legsBestOf / 2),
-    players: playerIds.map(id => ({
+    players: shuffledIds.map(id => ({
       id,
       name: getPlayer(id).name,
       remaining: startScore,
@@ -717,7 +689,11 @@ function finalizeLeg() {
 }
 
 function announcePlacement(name, place) {
-  speak(`${name}, ${ordinal(place)} place.`, { pitch: 1.1, rate: 1.0 });
+  if (place === 2) {
+    playClip("2. Sieger.m4a");
+  } else {
+    playClip(`place_${place}.m4a`);
+  }
 }
 
 function computeStandings() {
