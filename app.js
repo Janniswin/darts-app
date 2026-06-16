@@ -56,8 +56,26 @@ function showToast(msg) {
 let englishVoice = null;
 let speechUnlocked = false;
 
+// Default browser/OS voices are flat and robotic. Where available, prefer
+// the higher-quality "Natural"/"Online" neural voices (Edge/Windows,
+// Android) or Google's voices over the generic offline ones - they sound
+// far more like an excited darts MC.
+const VOICE_PRIORITY = [
+  /Microsoft\s+(Guy|Ryan|Andrew|Christopher).*Online.*Natural/i,
+  /Google US English/i,
+  /Google UK English Male/i,
+  /Daniel/i,            // macOS/iOS high-quality English voice
+  /Microsoft David/i,
+  /Microsoft Guy/i,
+];
+
 function pickVoice() {
   const voices = speechSynthesis.getVoices();
+  if (!voices.length) return;
+  for (const pattern of VOICE_PRIORITY) {
+    const match = voices.find(v => pattern.test(v.name));
+    if (match) { englishVoice = match; return; }
+  }
   englishVoice = voices.find(v => v.lang && v.lang.startsWith("en")) || voices[0] || null;
 }
 if ("speechSynthesis" in window) {
@@ -80,7 +98,7 @@ function unlockSpeech() {
 document.addEventListener("click", unlockSpeech, { once: true, capture: true });
 document.addEventListener("touchend", unlockSpeech, { once: true, capture: true });
 
-function speak(text) {
+function speak(text, { pitch = 1.05, rate = 1.0 } = {}) {
   const voiceOn = document.getElementById("voiceToggle").value === "on";
   if (!voiceOn) return;
   if (!("speechSynthesis" in window)) return;
@@ -92,21 +110,35 @@ function speak(text) {
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "en-US";
   if (englishVoice) utter.voice = englishVoice;
-  utter.rate = 0.95;
-  utter.pitch = 0.95;
+  utter.rate = rate;
+  utter.pitch = pitch;
   speechSynthesis.speak(utter);
 }
 
+// Vary pitch/rate and add a little MC-style flair depending on how good
+// the throw was - makes the announcer feel alive instead of a flat readout.
 function announceScore(score) {
-  speak(score === 0 ? "No score." : `${score}`);
+  if (score === 0) {
+    speak("No score.", { pitch: 0.85, rate: 0.95 });
+  } else if (score === 180) {
+    speak("One hundred and eighty!", { pitch: 1.3, rate: 1.05 });
+  } else if (score >= 140) {
+    speak(`${score}! Excellent darts!`, { pitch: 1.2, rate: 1.05 });
+  } else if (score >= 100) {
+    speak(`${score}! Nice one!`, { pitch: 1.12, rate: 1.0 });
+  } else if (score >= 60) {
+    speak(`${score}!`, { pitch: 1.05, rate: 1.0 });
+  } else {
+    speak(`${score}`, { pitch: 1.0, rate: 0.97 });
+  }
 }
 
 function announceCheckout(playerName) {
-  speak(`${playerName} checks out! Leg won!`);
+  speak(`${playerName} checks out! What a finish!`, { pitch: 1.3, rate: 1.05 });
 }
 
 function announceMatchWin(playerName) {
-  speak(`${playerName} wins the match! Congratulations!`);
+  speak(`${playerName} wins the match! Congratulations, well played!`, { pitch: 1.25, rate: 1.0 });
 }
 
 // ---------- Navigation ----------
@@ -619,6 +651,13 @@ function renderMatchHistory() {
       <div class="date">${m.mode} · Best of ${m.legsBestOf} · ${date}</div>
     `;
     container.appendChild(div);
+  });
+}
+
+// ---------- PWA: register service worker for installability + offline ----------
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
   });
 }
 

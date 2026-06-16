@@ -368,9 +368,15 @@ select:focus, input:focus { border-color: var(--gold); }
 .pad-actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
+  margin-top: 4px;
 }
-.miss-btn { font-size: 1rem; letter-spacing: 1px; }
+.pad-actions button {
+  padding: 7px 14px;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  box-shadow: none;
+}
 
 .leg-history {
   margin-top: 24px;
@@ -505,10 +511,7 @@ body {
   .top-bar {
     flex-direction: column;
     align-items: stretch;
-    padding: 14px 14px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    padding: 10px 14px;
   }
   .brand { justify-content: center; }
   .brand h1 { font-size: 1rem; }
@@ -535,35 +538,51 @@ body {
 
   .btn-primary, .btn-secondary, .btn-ghost { padding: 12px 16px; font-size: 0.85rem; }
 
-  /* Scoreboard: side-by-side cards even on small screens, just tighter */
-  .scoreboard { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
-  .player-card { padding: 14px 10px; }
-  .player-card .name { font-size: 0.85rem; margin-top: 16px; }
-  .player-card .remaining { font-size: 2.1rem; }
-  .player-card .meta { font-size: 0.65rem; }
-  .player-card .meta strong { font-size: 0.85rem; }
+  /* Scoreboard stays pinned to the top while scrolling through the dart
+     pad below, so every player's score is always visible while entering
+     a throw. */
+  .scoreboard {
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 6px;
+    margin-top: 0;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 8px 0 6px;
+    background: var(--ink);
+  }
+  .player-card { padding: 8px 6px; border-radius: 10px; }
+  .player-card.active::before { font-size: 0.5rem; top: 5px; }
+  .player-card .name { font-size: 0.68rem; margin-top: 11px; letter-spacing: 0.4px; }
+  .player-card .remaining { font-size: 1.6rem; margin: 2px 0; }
+  .player-card .meta { font-size: 0.55rem; margin-top: 4px; }
+  .player-card .meta strong { font-size: 0.7rem; }
+  .player-card .legs-won { margin-top: 5px; gap: 3px; }
+  .leg-pip { width: 7px; height: 7px; }
 
-  .oche-panel { padding: 16px 12px; margin-top: 14px; }
-  .current-turn { font-size: 0.95rem; }
+  .oche-panel { padding: 12px 10px; margin-top: 8px; }
+  .current-turn { font-size: 0.85rem; margin-bottom: 10px; }
+  .leg-info { font-size: 0.7rem; }
 
-  .dart-throws { gap: 8px; margin-bottom: 14px; }
-  .throw-box { padding: 8px 10px; min-width: 56px; }
-  .throw-box strong { font-size: 1.15rem; }
-  .throw-total { padding: 8px 14px; min-width: 70px; }
-  .throw-total strong { font-size: 1.3rem; }
+  .dart-throws { gap: 6px; margin-bottom: 12px; }
+  .throw-box { padding: 6px 8px; min-width: 48px; }
+  .throw-box span { font-size: 0.6rem; }
+  .throw-box strong { font-size: 1rem; }
+  .throw-total { padding: 6px 12px; min-width: 60px; }
+  .throw-total strong { font-size: 1.15rem; }
 
-  .modifier-row { gap: 8px; margin-bottom: 12px; }
-  .mod-btn { padding: 10px 16px; font-size: 0.8rem; flex: 1; }
+  .modifier-row { gap: 6px; margin-bottom: 10px; }
+  .mod-btn { padding: 9px 14px; font-size: 0.78rem; flex: 1; }
 
   .number-grid {
     grid-template-columns: repeat(5, 1fr);
-    gap: 7px;
+    gap: 6px;
     max-width: 100%;
   }
-  .num-btn { padding: 16px 0; font-size: 1.15rem; }
+  .num-btn { padding: 13px 0; font-size: 1.05rem; }
 
-  .pad-actions { flex-direction: column-reverse; gap: 8px; }
-  .pad-actions button { width: 100%; }
+  .pad-actions { gap: 6px; margin-top: 2px; }
+  .pad-actions button { flex: 1; padding: 6px 0; font-size: 0.68rem; }
 
   .stats-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .stat-card { padding: 12px; }
