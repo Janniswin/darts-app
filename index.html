@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -69,6 +69,13 @@
             <option value="off">Off</option>
           </select>
         </div>
+        <div class="setup-card setup-card-wide">
+          <label>Announcer Voice</label>
+          <div class="voice-pick-row">
+            <select id="voiceSelect"></select>
+            <button type="button" id="voiceTestBtn" class="btn-ghost voice-test">Test</button>
+          </div>
+        </div>
       </div>
 
       <h3>Select Players for this Match</h3>
@@ -87,6 +94,7 @@
         <span id="currentPlayerName">—</span> at the oche
         <div class="leg-info">Leg <span id="legCounter">1</span> · <span id="legsLabel"></span></div>
       </div>
+      <div id="checkoutHint" class="checkout-hint"></div>
 
       <div class="dart-throws">
         <div class="throw-box" id="throw1"><span>1.</span><strong>-</strong></div>
@@ -154,6 +162,6 @@
   </div>
 </div>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

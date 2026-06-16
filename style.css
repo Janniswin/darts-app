@@ -255,6 +255,40 @@ select:focus, input:focus { border-color: var(--gold); }
 .current-turn span#currentPlayerName { color: var(--gold-light); }
 .leg-info { font-size: 0.8rem; color: var(--text-dim); font-weight: 400; margin-top: 4px; }
 
+/* Checkout suggestion banner */
+.checkout-hint {
+  text-align: center;
+  margin: 0 auto 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  display: none;
+}
+.checkout-hint.show { display: block; }
+.checkout-hint .co-label {
+  color: var(--gold-light);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  margin-right: 6px;
+}
+.checkout-hint b {
+  display: inline-block;
+  background: linear-gradient(180deg, var(--board-red), var(--board-red-dark));
+  color: #fff;
+  padding: 2px 9px;
+  border-radius: 6px;
+  margin: 0 2px;
+  font-family: 'Consolas', monospace;
+}
+
+/* Voice picker in setup */
+.setup-card-wide { grid-column: 1 / -1; }
+.voice-pick-row { display: flex; gap: 8px; }
+.voice-pick-row select { flex: 1; min-width: 0; }
+.voice-test { flex: 0 0 auto; padding: 11px 16px; }
+
 .dart-throws { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
 .throw-box {
   background: #0b1812;
@@ -590,33 +624,45 @@ body {
 
   .btn-primary, .btn-secondary, .btn-ghost { padding: 12px 16px; font-size: 0.85rem; }
 
-  /* ===== MATCH VIEW: fills every remaining pixel of the screen ===== */
+  /* ===== MATCH VIEW: edge-to-edge, fills every pixel of the screen =====
+     The game view goes fully bleed to the screen edges (no dark green
+     margins around it). */
+  #view-game.active { margin: 0 -8px; }   /* cancel main's side padding */
+
   .scoreboard {
     flex: 0 0 auto;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 5px;
+    grid-template-columns: repeat(3, 1fr); /* overridden by JS per #players */
+    gap: 4px;
     margin-top: 0;
-    padding: 4px 0;
+    padding: 4px 6px;
   }
-  .player-card { padding: 5px 4px; border-radius: 8px; }
+  .player-card { padding: 6px 4px; border-radius: 8px; }
   .player-card.active::before { font-size: 0.45rem; top: 4px; }
-  .player-card .name { font-size: 0.6rem; margin-top: 9px; letter-spacing: 0.3px; }
-  .player-card .remaining { font-size: 1.4rem; margin: 1px 0; }
+  .player-card .name { font-size: 0.62rem; margin-top: 9px; letter-spacing: 0.3px; }
+  .player-card .remaining { font-size: 1.5rem; margin: 1px 0; }
   .player-card .meta { font-size: 0.5rem; margin-top: 2px; }
   .player-card .meta strong { font-size: 0.65rem; }
   .player-card .legs-won { margin-top: 3px; gap: 2px; }
   .leg-pip { width: 6px; height: 6px; }
 
+  /* The dart-entry panel is borderless and flush to the screen edges. */
   .oche-panel {
     flex: 1;
     min-height: 0;
-    margin-top: 6px;
-    padding: 8px;
+    margin: 5px 0 0;
+    padding: 6px 6px max(6px, env(safe-area-inset-bottom));
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     display: flex;
     flex-direction: column;
   }
-  .current-turn { flex: 0 0 auto; font-size: 0.78rem; margin-bottom: 6px; }
+  .current-turn { flex: 0 0 auto; font-size: 0.78rem; margin-bottom: 5px; }
   .leg-info { font-size: 0.62rem; margin-top: 1px; }
+  .checkout-hint { flex: 0 0 auto; font-size: 0.8rem; margin-bottom: 6px; }
+  .checkout-hint .co-label { font-size: 0.6rem; letter-spacing: 1px; }
+  .checkout-hint b { padding: 1px 7px; }
 
   .dart-throws { flex: 0 0 auto; gap: 5px; margin-bottom: 8px; }
   .throw-box { padding: 5px 8px; min-width: 42px; border-radius: 7px; }
