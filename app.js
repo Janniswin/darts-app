@@ -57,26 +57,32 @@ let englishVoice = null;
 let speechUnlocked = false;
 
 // Default browser/OS voices are flat and robotic. Where available, prefer
-// the higher-quality "Natural"/"Online" neural voices (Edge/Windows,
-// Android) or Google's voices over the generic offline ones - they sound
-// far more like an excited darts MC.
-const VOICE_PRIORITY = [
-  /Microsoft\s+(Guy|Ryan|Andrew|Christopher).*Online.*Natural/i,
+// the cloud-quality "Natural"/"Online"/"Neural"/"Enhanced"/"Premium" voices
+// - these are the ones that actually sound like a real person rather than
+// a 2005 text reader. Generic keyword match first (catches every neural
+// voice regardless of which name Microsoft/Google/Apple gave it), then a
+// short list of known-good named voices, then whatever's left.
+const QUALITY_KEYWORDS = /natural|online|neural|enhanced|premium|wavenet/i;
+const NAMED_FALLBACKS = [
   /Google US English/i,
   /Google UK English Male/i,
-  /Daniel/i,            // macOS/iOS high-quality English voice
-  /Microsoft David/i,
-  /Microsoft Guy/i,
+  /Daniel/i,   // macOS/iOS built-in high-quality English voice
+  /Microsoft (David|Guy|Mark)/i,
 ];
 
 function pickVoice() {
   const voices = speechSynthesis.getVoices();
   if (!voices.length) return;
-  for (const pattern of VOICE_PRIORITY) {
-    const match = voices.find(v => pattern.test(v.name));
-    if (match) { englishVoice = match; return; }
-  }
-  englishVoice = voices.find(v => v.lang && v.lang.startsWith("en")) || voices[0] || null;
+
+  const english = voices.filter(v => v.lang && v.lang.startsWith("en"));
+  const pool = english.length ? english : voices;
+
+  englishVoice =
+    pool.find(v => QUALITY_KEYWORDS.test(v.name)) ||
+    NAMED_FALLBACKS.map(p => pool.find(v => p.test(v.name))).find(Boolean) ||
+    pool[0] ||
+    voices[0] ||
+    null;
 }
 if ("speechSynthesis" in window) {
   speechSynthesis.onvoiceschanged = pickVoice;

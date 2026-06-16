@@ -504,18 +504,33 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ===== MOBILE LAYOUT (phones) ===== */
+/* ===== MOBILE LAYOUT (phones) =====
+   The whole app is locked to exactly one viewport height - nothing at
+   the document level scrolls. That keeps the browser's address bar from
+   sliding in/out as you scroll (which is what causes that "slider"
+   jump), and lets the active view stretch to fill 100% of the screen.
+   Views with potentially long content (Stats/Players) scroll *inside*
+   their own panel instead of scrolling the page. */
 @media (max-width: 640px) {
-  main { padding: 8px 8px 24px; }
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+  }
 
   .top-bar {
+    flex: 0 0 auto;
     flex-direction: column;
     align-items: stretch;
-    padding: 6px 12px;
+    padding: 5px 12px;
   }
   .brand { justify-content: center; }
-  .brand h1 { font-size: 0.85rem; }
-  .brand-dot { width: 12px; height: 12px; }
+  .brand h1 { font-size: 0.8rem; }
+  .brand-dot { width: 11px; height: 11px; }
 
   .tabs {
     display: flex;
@@ -526,10 +541,31 @@ body {
     padding-bottom: 2px;
     justify-content: flex-start;
   }
-  .tab-btn { flex: 0 0 auto; padding: 6px 12px; font-size: 0.72rem; }
+  .tab-btn { flex: 0 0 auto; padding: 6px 12px; font-size: 0.7rem; }
 
-  .panel { padding: 18px 14px; }
-  .panel h2 { font-size: 1.05rem; }
+  main {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .view { flex: 1; min-height: 0; }
+  .view.active { display: flex; flex-direction: column; }
+
+  /* Setup / Stats / Players: the panel itself scrolls internally so the
+     page never does. */
+  #view-setup.active, #view-stats.active, #view-players.active { overflow: hidden; }
+  #view-setup .panel, #view-stats .panel, #view-players .panel {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    margin-top: 8px;
+    padding: 14px;
+  }
+  .panel h2 { font-size: 1rem; }
 
   .setup-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   select, input[type="text"], input[type="number"] { font-size: 0.95rem; padding: 10px 12px; }
@@ -539,55 +575,76 @@ body {
 
   .btn-primary, .btn-secondary, .btn-ghost { padding: 12px 16px; font-size: 0.85rem; }
 
-  /* Match view (scoreboard + dart pad) is sized to fit one phone screen
-     with no scrolling required during play - only the leg history below
-     it needs a scroll. */
-  .view#view-game { display: flex; flex-direction: column; }
-
+  /* ===== MATCH VIEW: fills every remaining pixel of the screen ===== */
   .scoreboard {
+    flex: 0 0 auto;
     grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
     gap: 5px;
     margin-top: 0;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    padding: 5px 0 4px;
-    background: var(--ink);
+    padding: 4px 0;
   }
   .player-card { padding: 5px 4px; border-radius: 8px; }
   .player-card.active::before { font-size: 0.45rem; top: 4px; }
-  .player-card .name { font-size: 0.58rem; margin-top: 9px; letter-spacing: 0.3px; }
-  .player-card .remaining { font-size: 1.3rem; margin: 1px 0; }
-  .player-card .meta { font-size: 0.48rem; margin-top: 2px; }
-  .player-card .meta strong { font-size: 0.62rem; }
+  .player-card .name { font-size: 0.6rem; margin-top: 9px; letter-spacing: 0.3px; }
+  .player-card .remaining { font-size: 1.4rem; margin: 1px 0; }
+  .player-card .meta { font-size: 0.5rem; margin-top: 2px; }
+  .player-card .meta strong { font-size: 0.65rem; }
   .player-card .legs-won { margin-top: 3px; gap: 2px; }
   .leg-pip { width: 6px; height: 6px; }
 
-  .oche-panel { padding: 8px 8px; margin-top: 6px; }
-  .current-turn { font-size: 0.78rem; margin-bottom: 6px; }
+  .oche-panel {
+    flex: 1;
+    min-height: 0;
+    margin-top: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+  .current-turn { flex: 0 0 auto; font-size: 0.78rem; margin-bottom: 6px; }
   .leg-info { font-size: 0.62rem; margin-top: 1px; }
 
-  .dart-throws { gap: 4px; margin-bottom: 8px; }
-  .throw-box { padding: 4px 6px; min-width: 40px; border-radius: 7px; }
-  .throw-box span { font-size: 0.52rem; }
-  .throw-box strong { font-size: 0.85rem; }
-  .throw-total { padding: 4px 10px; min-width: 50px; border-radius: 7px; }
-  .throw-total span { font-size: 0.52rem; }
-  .throw-total strong { font-size: 0.95rem; }
+  .dart-throws { flex: 0 0 auto; gap: 5px; margin-bottom: 8px; }
+  .throw-box { padding: 5px 8px; min-width: 42px; border-radius: 7px; }
+  .throw-box span { font-size: 0.55rem; }
+  .throw-box strong { font-size: 1rem; }
+  .throw-total { padding: 5px 12px; min-width: 54px; border-radius: 7px; }
+  .throw-total span { font-size: 0.55rem; }
+  .throw-total strong { font-size: 1.1rem; }
 
-  .modifier-row { gap: 5px; margin-bottom: 6px; }
-  .mod-btn { padding: 6px 10px; font-size: 0.68rem; flex: 1; }
+  .dartpad { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
+  .modifier-row { flex: 0 0 auto; gap: 6px; margin-bottom: 8px; }
+  .mod-btn { padding: 10px 10px; font-size: 0.75rem; flex: 1; }
+
+  /* Number grid grows to consume all remaining vertical space - each
+     button cell stretches with it (grid items fill their cell, and the
+     row tracks are forced equal via grid-auto-rows: 1fr). */
   .number-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
+    grid-auto-rows: 1fr;
+    gap: 6px;
     max-width: 100%;
-    margin: 0 auto 8px;
+    margin: 0 0 8px;
   }
-  .num-btn { padding: 9px 0; font-size: 0.92rem; border-radius: 6px; }
+  .num-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 1.5rem;
+    border-radius: 8px;
+  }
 
-  .pad-actions { gap: 5px; margin-top: 0; }
-  .pad-actions button { flex: 1; padding: 5px 0; font-size: 0.62rem; }
+  .pad-actions { flex: 0 0 auto; gap: 6px; margin-top: 0; }
+  .pad-actions button { flex: 1; padding: 8px 0; font-size: 0.7rem; }
+
+  /* Leg history is hidden during play on mobile - the live scoreboard
+     already shows everything that matters, and hiding it frees up the
+     space the dart pad needs to be big. */
+  .leg-history { display: none; }
 
   .stats-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .stat-card { padding: 12px; }
@@ -602,19 +659,13 @@ body {
   .modal-content h2 { font-size: 1.4rem; }
 }
 
-@media (max-width: 380px) {
-  /* Keep 5 columns (not 4) so the grid stays at 5 rows instead of 6 -
-     less height beats more width on very narrow/short phones. */
-  .num-btn { padding: 7px 0; font-size: 0.85rem; }
-  .player-card .remaining { font-size: 1.1rem; }
-}
-
-@media (max-height: 700px) {
-  /* Short screens (e.g. landscape-ish phones, smaller iPhones): shave a
-     bit more so the dart pad never needs scrolling. */
-  .number-grid { gap: 3px; margin-bottom: 6px; }
-  .num-btn { padding: 7px 0; }
-  .oche-panel { padding: 6px 8px; }
+@media (max-width: 640px) and (max-height: 700px) {
+  /* Short screens: trim the fixed-size chrome around the dart pad a
+     little more so the grid still gets generous room. */
+  .top-bar { padding: 4px 10px; }
+  .oche-panel { padding: 6px; }
+  .current-turn { font-size: 0.7rem; margin-bottom: 4px; }
   .dart-throws { margin-bottom: 6px; }
-  .modifier-row { margin-bottom: 5px; }
+  .modifier-row { margin-bottom: 6px; }
+  .num-btn { font-size: 1.25rem; }
 }
