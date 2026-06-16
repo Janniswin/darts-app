@@ -506,26 +506,27 @@ body {
 
 /* ===== MOBILE LAYOUT (phones) ===== */
 @media (max-width: 640px) {
-  main { padding: 16px 10px 40px; }
+  main { padding: 8px 8px 24px; }
 
   .top-bar {
     flex-direction: column;
     align-items: stretch;
-    padding: 10px 14px;
+    padding: 6px 12px;
   }
   .brand { justify-content: center; }
-  .brand h1 { font-size: 1rem; }
+  .brand h1 { font-size: 0.85rem; }
+  .brand-dot { width: 12px; height: 12px; }
 
   .tabs {
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    gap: 6px;
+    gap: 5px;
     padding-bottom: 2px;
     justify-content: flex-start;
   }
-  .tab-btn { flex: 0 0 auto; padding: 9px 14px; font-size: 0.78rem; }
+  .tab-btn { flex: 0 0 auto; padding: 6px 12px; font-size: 0.72rem; }
 
   .panel { padding: 18px 14px; }
   .panel h2 { font-size: 1.05rem; }
@@ -538,51 +539,55 @@ body {
 
   .btn-primary, .btn-secondary, .btn-ghost { padding: 12px 16px; font-size: 0.85rem; }
 
-  /* Scoreboard stays pinned to the top while scrolling through the dart
-     pad below, so every player's score is always visible while entering
-     a throw. */
+  /* Match view (scoreboard + dart pad) is sized to fit one phone screen
+     with no scrolling required during play - only the leg history below
+     it needs a scroll. */
+  .view#view-game { display: flex; flex-direction: column; }
+
   .scoreboard {
-    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 5px;
     margin-top: 0;
     position: sticky;
     top: 0;
     z-index: 5;
-    padding: 8px 0 6px;
+    padding: 5px 0 4px;
     background: var(--ink);
   }
-  .player-card { padding: 8px 6px; border-radius: 10px; }
-  .player-card.active::before { font-size: 0.5rem; top: 5px; }
-  .player-card .name { font-size: 0.68rem; margin-top: 11px; letter-spacing: 0.4px; }
-  .player-card .remaining { font-size: 1.6rem; margin: 2px 0; }
-  .player-card .meta { font-size: 0.55rem; margin-top: 4px; }
-  .player-card .meta strong { font-size: 0.7rem; }
-  .player-card .legs-won { margin-top: 5px; gap: 3px; }
-  .leg-pip { width: 7px; height: 7px; }
+  .player-card { padding: 5px 4px; border-radius: 8px; }
+  .player-card.active::before { font-size: 0.45rem; top: 4px; }
+  .player-card .name { font-size: 0.58rem; margin-top: 9px; letter-spacing: 0.3px; }
+  .player-card .remaining { font-size: 1.3rem; margin: 1px 0; }
+  .player-card .meta { font-size: 0.48rem; margin-top: 2px; }
+  .player-card .meta strong { font-size: 0.62rem; }
+  .player-card .legs-won { margin-top: 3px; gap: 2px; }
+  .leg-pip { width: 6px; height: 6px; }
 
-  .oche-panel { padding: 12px 10px; margin-top: 8px; }
-  .current-turn { font-size: 0.85rem; margin-bottom: 10px; }
-  .leg-info { font-size: 0.7rem; }
+  .oche-panel { padding: 8px 8px; margin-top: 6px; }
+  .current-turn { font-size: 0.78rem; margin-bottom: 6px; }
+  .leg-info { font-size: 0.62rem; margin-top: 1px; }
 
-  .dart-throws { gap: 6px; margin-bottom: 12px; }
-  .throw-box { padding: 6px 8px; min-width: 48px; }
-  .throw-box span { font-size: 0.6rem; }
-  .throw-box strong { font-size: 1rem; }
-  .throw-total { padding: 6px 12px; min-width: 60px; }
-  .throw-total strong { font-size: 1.15rem; }
+  .dart-throws { gap: 4px; margin-bottom: 8px; }
+  .throw-box { padding: 4px 6px; min-width: 40px; border-radius: 7px; }
+  .throw-box span { font-size: 0.52rem; }
+  .throw-box strong { font-size: 0.85rem; }
+  .throw-total { padding: 4px 10px; min-width: 50px; border-radius: 7px; }
+  .throw-total span { font-size: 0.52rem; }
+  .throw-total strong { font-size: 0.95rem; }
 
-  .modifier-row { gap: 6px; margin-bottom: 10px; }
-  .mod-btn { padding: 9px 14px; font-size: 0.78rem; flex: 1; }
+  .modifier-row { gap: 5px; margin-bottom: 6px; }
+  .mod-btn { padding: 6px 10px; font-size: 0.68rem; flex: 1; }
 
   .number-grid {
     grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
+    gap: 4px;
     max-width: 100%;
+    margin: 0 auto 8px;
   }
-  .num-btn { padding: 13px 0; font-size: 1.05rem; }
+  .num-btn { padding: 9px 0; font-size: 0.92rem; border-radius: 6px; }
 
-  .pad-actions { gap: 6px; margin-top: 2px; }
-  .pad-actions button { flex: 1; padding: 6px 0; font-size: 0.68rem; }
+  .pad-actions { gap: 5px; margin-top: 0; }
+  .pad-actions button { flex: 1; padding: 5px 0; font-size: 0.62rem; }
 
   .stats-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .stat-card { padding: 12px; }
@@ -598,6 +603,18 @@ body {
 }
 
 @media (max-width: 380px) {
-  .number-grid { grid-template-columns: repeat(4, 1fr); }
-  .player-card .remaining { font-size: 1.8rem; }
+  /* Keep 5 columns (not 4) so the grid stays at 5 rows instead of 6 -
+     less height beats more width on very narrow/short phones. */
+  .num-btn { padding: 7px 0; font-size: 0.85rem; }
+  .player-card .remaining { font-size: 1.1rem; }
+}
+
+@media (max-height: 700px) {
+  /* Short screens (e.g. landscape-ish phones, smaller iPhones): shave a
+     bit more so the dart pad never needs scrolling. */
+  .number-grid { gap: 3px; margin-bottom: 6px; }
+  .num-btn { padding: 7px 0; }
+  .oche-panel { padding: 6px 8px; }
+  .dart-throws { margin-bottom: 6px; }
+  .modifier-row { margin-bottom: 5px; }
 }
