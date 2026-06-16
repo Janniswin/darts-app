@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0c1d13">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Family Darts Championship</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<header class="top-bar">
+  <div class="brand">
+    <span class="brand-dot"></span>
+    <h1>FAMILY DARTS <span class="accent">CHAMPIONSHIP</span></h1>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="setup">New Game</button>
+    <button class="tab-btn" data-view="game">Match</button>
+    <button class="tab-btn" data-view="stats">Statistics</button>
+    <button class="tab-btn" data-view="players">Players</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ SETUP VIEW ============ -->
+  <section id="view-setup" class="view active">
+    <div class="panel">
+      <h2>Configure Match</h2>
+
+      <div class="setup-grid">
+        <div class="setup-card">
+          <label>Game Mode</label>
+          <select id="modeSelect">
+            <option value="501">501</option>
+            <option value="301">301</option>
+            <option value="701">701</option>
+          </select>
+        </div>
+        <div class="setup-card">
+          <label>Finish</label>
+          <select id="finishSelect">
+            <option value="double">Double Out</option>
+            <option value="straight">Straight Out</option>
+          </select>
+        </div>
+        <div class="setup-card">
+          <label>Legs (Best of)</label>
+          <select id="legsSelect">
+            <option value="1" selected>1</option>
+            <option value="3">3</option>
+            <option value="5">5</option>
+            <option value="7">7</option>
+          </select>
+        </div>
+        <div class="setup-card">
+          <label>Voice Announcer</label>
+          <select id="voiceToggle">
+            <option value="on" selected>On</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+      </div>
+
+      <h3>Select Players for this Match</h3>
+      <div id="playerSelectList" class="player-select-list"></div>
+
+      <button id="startMatchBtn" class="btn-primary big">START MATCH</button>
+    </div>
+  </section>
+
+  <!-- ============ GAME VIEW ============ -->
+  <section id="view-game" class="view">
+    <div id="scoreboard" class="scoreboard"></div>
+
+    <div class="oche-panel">
+      <div class="current-turn">
+        <span id="currentPlayerName">—</span> at the oche
+        <div class="leg-info">Leg <span id="legCounter">1</span> · <span id="legsLabel"></span></div>
+      </div>
+
+      <div class="dart-throws">
+        <div class="throw-box" id="throw1"><span>1.</span><strong>-</strong></div>
+        <div class="throw-box" id="throw2"><span>2.</span><strong>-</strong></div>
+        <div class="throw-box" id="throw3"><span>3.</span><strong>-</strong></div>
+        <div class="throw-total">
+          <span>Turn</span>
+          <strong id="turnTotal">0</strong>
+        </div>
+      </div>
+
+      <div class="dartpad">
+        <div class="modifier-row">
+          <button type="button" class="mod-btn active" data-mod="single">SINGLE</button>
+          <button type="button" class="mod-btn" data-mod="double">DOUBLE</button>
+          <button type="button" class="mod-btn" data-mod="triple">TRIPLE</button>
+        </div>
+
+        <div class="number-grid" id="numberGrid"></div>
+
+        <div class="pad-actions">
+          <button type="button" id="missBtn" class="btn-secondary miss-btn">FUCK (Miss)</button>
+          <button type="button" id="undoBtn" class="btn-ghost">Undo</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="legHistory" class="leg-history"></div>
+  </section>
+
+  <!-- ============ STATS VIEW ============ -->
+  <section id="view-stats" class="view">
+    <div class="panel">
+      <h2>Statistics</h2>
+      <div class="stats-toolbar">
+        <select id="statsPlayerSelect"></select>
+      </div>
+      <div id="statsCards" class="stats-cards"></div>
+
+      <h3>Match History</h3>
+      <div id="matchHistoryList" class="match-history-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ PLAYERS VIEW ============ -->
+  <section id="view-players" class="view">
+    <div class="panel">
+      <h2>Player Management</h2>
+      <form id="addPlayerForm" class="add-player-form">
+        <input type="text" id="newPlayerName" placeholder="Player name" autocomplete="off">
+        <button type="submit" class="btn-primary">Add</button>
+      </form>
+      <div id="playerList" class="player-list"></div>
+    </div>
+  </section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+<div id="winnerModal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="winnerTitle">🏆 WINNER 🏆</h2>
+    <p id="winnerText"></p>
+    <button id="closeWinnerModal" class="btn-primary">Close</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
