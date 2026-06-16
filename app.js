@@ -727,7 +727,6 @@ function finishMatch(winnerMatchPlayer) {
   });
   saveHistory();
 
-  setTimeout(() => announceMatchWin(winnerMatchPlayer.name), 1500);
 
   document.getElementById("winnerTitle").textContent = "🏆 " + winnerMatchPlayer.name.toUpperCase() + " 🏆";
   // Full final standings (1st, 2nd, 3rd …) so the placement play-off shows.
