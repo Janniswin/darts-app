@@ -610,19 +610,25 @@ body {
   .panel, .view { scrollbar-width: none; -ms-overflow-style: none; }
   .panel h2 { font-size: 1rem; margin-bottom: 6px; }
 
-  /* Setup view fills the whole screen and lays its content out evenly so
-     there's no empty gap and no scrollbar. */
-  #view-setup .panel { display: flex; flex-direction: column; }
-  #view-setup .panel h3 { margin-top: 14px; margin-bottom: 8px; }
-  #view-setup #startMatchBtn { margin-top: auto; }
+  /* Setup view: natural flow, scrolls internally if it gets tall. */
+  #view-setup .panel h3 { margin-top: 16px; margin-bottom: 8px; }
+  #view-setup #startMatchBtn { margin-top: 16px; }
 
   .setup-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  select, input[type="text"], input[type="number"] { font-size: 0.95rem; padding: 10px 12px; }
+  select, input[type="text"], input[type="number"] {
+    font-size: 0.95rem;
+    padding: 10px 12px;
+    max-width: 100%;
+  }
+  /* Long voice names must not blow out the layout. */
+  #voiceSelect { text-overflow: ellipsis; }
 
   .player-select-list { gap: 8px; }
   .player-chip { padding: 9px 14px; font-size: 0.85rem; }
 
   .btn-primary, .btn-secondary, .btn-ghost { padding: 12px 16px; font-size: 0.85rem; }
+  /* Keep the main Start button big and prominent. */
+  .btn-primary.big { padding: 15px; font-size: 1rem; }
 
   /* ===== MATCH VIEW: edge-to-edge, fills every pixel of the screen =====
      The game view goes fully bleed to the screen edges (no dark green
