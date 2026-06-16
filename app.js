@@ -412,10 +412,12 @@ function snapshotLegState() {
       remaining: p.remaining,
       currentLegTurns: p.currentLegTurns.slice(),
       tripleCount: p.tripleCount,
+      out: p.out,
     })),
     currentPlayerIdx: match.currentPlayerIdx,
     currentThrows: match.currentThrows.slice(),
     legLog: match.legLog.slice(),
+    legFinishOrder: match.legFinishOrder.slice(),
   };
 }
 
@@ -424,10 +426,12 @@ function restoreLegState(s) {
     match.players[i].remaining = sp.remaining;
     match.players[i].currentLegTurns = sp.currentLegTurns.slice();
     match.players[i].tripleCount = sp.tripleCount;
+    match.players[i].out = sp.out;
   });
   match.currentPlayerIdx = s.currentPlayerIdx;
   match.currentThrows = s.currentThrows.slice();
   match.legLog = s.legLog.slice();
+  match.legFinishOrder = s.legFinishOrder.slice();
 }
 
 function pushUndo() {
@@ -452,11 +456,13 @@ function startMatch(playerIds, startScore, finishMode, legsBestOf) {
       turnHistory: [],     // per leg: array of turn totals
       currentLegTurns: [],
       tripleCount: 0,      // live triple counter (T10+) for this match
+      out: false,          // already finished (checked out) this leg
     })),
     currentPlayerIdx: 0,
     legNumber: 1,
     currentThrows: [],     // up to 3 dart objects of the current turn
     legLog: [],
+    legFinishOrder: [],    // player ids in the order they checked out this leg
     undoStack: [],         // per-dart snapshots for undo within a leg
     finished: false,
   };
@@ -485,15 +491,23 @@ function renderScoreboard() {
   container.style.gridTemplateColumns = `repeat(${match.players.length}, 1fr)`;
   match.players.forEach((p, idx) => {
     const card = document.createElement("div");
-    card.className = "player-card" + (idx === match.currentPlayerIdx ? " active" : "");
+    const finishedPlace = match.legFinishOrder.indexOf(p.id); // -1 if still in
+    const isOut = p.out && finishedPlace >= 0;
+    card.className = "player-card"
+      + (idx === match.currentPlayerIdx && !isOut ? " active" : "")
+      + (isOut ? " out" : "");
     const avg = computeLiveAverage(p);
     let pips = "";
     for (let i = 0; i < match.legsToWin; i++) {
       pips += `<span class="leg-pip ${i < p.legsWon ? "won" : ""}"></span>`;
     }
+    // Players who already checked out this leg show their finishing place.
+    const remainingDisplay = isOut
+      ? `<div class="remaining done">${ordinal(finishedPlace + 1)}</div>`
+      : `<div class="remaining">${p.remaining}</div>`;
     card.innerHTML = `
       <div class="name">${escapeHtml(p.name)}</div>
-      <div class="remaining">${p.remaining}</div>
+      ${remainingDisplay}
       <div class="meta">
         <div><strong>${avg}</strong>Avg</div>
         <div><strong>${p.tripleCount}</strong>Triples</div>
@@ -652,8 +666,17 @@ function endTurnCleanup() {
 }
 
 function nextPlayer() {
-  match.currentPlayerIdx = (match.currentPlayerIdx + 1) % match.players.length;
+  // Advance to the next player who has NOT already finished this leg.
+  const n = match.players.length;
+  for (let i = 1; i <= n; i++) {
+    const idx = (match.currentPlayerIdx + i) % n;
+    if (!match.players[idx].out) { match.currentPlayerIdx = idx; break; }
+  }
   document.getElementById("currentPlayerName").textContent = currentMatchPlayer().name;
+}
+
+function ordinal(n) {
+  return n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`;
 }
 
 function renderLegLog() {
@@ -670,27 +693,53 @@ function renderLegLog() {
 function handleCheckout(mp, turnScoreSoFar) {
   mp.currentLegTurns.push(turnScoreSoFar);
   mp.remaining = 0;
+  mp.out = true;
+  match.legFinishOrder.push(mp.id);
   announceScore(turnScoreSoFar);
-  setTimeout(() => announceCheckout(mp.name), 1200);
-  onLegWon(mp, turnScoreSoFar);
+
+  const isLegWinner = match.legFinishOrder.length === 1;
+  if (isLegWinner) {
+    mp.legsWon += 1; // live (scoreboard) leg count
+    const ws = getPlayer(mp.id)?.stats;
+    if (ws) {
+      ws.checkoutsHit += 1;
+      if (turnScoreSoFar > ws.bestCheckout) ws.bestCheckout = turnScoreSoFar;
+    }
+    savePlayers();
+    match.legLog.push(`🎯 ${mp.name} wins leg ${match.legNumber}!`);
+    setTimeout(() => announceCheckout(mp.name), 1200);
+  } else {
+    const place = match.legFinishOrder.length; // 2nd, 3rd, ...
+    match.legLog.push(`${mp.name} finishes ${ordinal(place)}.`);
+    setTimeout(() => announcePlacement(mp.name, place), 1000);
+  }
+
+  // Anyone still playing? If 0 or 1 left, the leg is fully decided.
+  const active = match.players.filter(p => !p.out);
+  if (active.length <= 1) {
+    if (active.length === 1) match.legFinishOrder.push(active[0].id); // last place
+    finalizeLeg();
+    return;
+  }
+
+  // Others keep playing for the next placement.
+  match.currentThrows = [];
+  nextPlayer();
+  renderScoreboard();
+  renderThrows();
+  renderLegLog();
 }
 
-function onLegWon(mp, checkoutScore) {
-  mp.legsWon += 1;
-  match.legLog.push(`🎯 ${mp.name} wins leg ${match.legNumber}!`);
-
+function finalizeLeg() {
   // Freeze turn history for averages
-  match.players.forEach(p => {
-    p.turnHistory.push(p.currentLegTurns);
-  });
+  match.players.forEach(p => p.turnHistory.push(p.currentLegTurns));
 
-  // Update persistent player stats for this leg
+  // Credit persistent per-leg stats for every player
   match.players.forEach(p => {
     const realPlayer = getPlayer(p.id);
     if (!realPlayer) return;
     const s = realPlayer.stats;
     s.legsPlayed += 1;
-    if (p.id === mp.id) s.legsWon += 1;
     s.tripleCount += p.tripleCount;
     p.currentLegTurns.forEach(turnVal => {
       s.dartsThrown += 3;
@@ -700,18 +749,17 @@ function onLegWon(mp, checkoutScore) {
       if (turnVal > s.highestTurn) s.highestTurn = turnVal;
     });
   });
-  const winnerStats = getPlayer(mp.id)?.stats;
-  if (winnerStats) {
-    winnerStats.checkoutsHit += 1;
-    if (checkoutScore > winnerStats.bestCheckout) winnerStats.bestCheckout = checkoutScore;
-  }
+  const legWinnerId = match.legFinishOrder[0];
+  const lwStats = getPlayer(legWinnerId)?.stats;
+  if (lwStats) lwStats.legsWon += 1;
   savePlayers();
 
-  // Check match win
-  if (mp.legsWon >= match.legsToWin) {
-    finishMatch(mp);
-    return;
-  }
+  // Finishing order of this leg drives the placement / standings.
+  match.lastFinishOrder = match.legFinishOrder.slice();
+
+  // Match decided?
+  const matchWinner = match.players.find(p => p.legsWon >= match.legsToWin);
+  if (matchWinner) { finishMatch(matchWinner); return; }
 
   // Prepare next leg
   match.legNumber += 1;
@@ -719,17 +767,34 @@ function onLegWon(mp, checkoutScore) {
     p.remaining = match.startScore;
     p.currentLegTurns = [];
     p.tripleCount = 0;
+    p.out = false;
   });
   match.currentThrows = [];
+  match.legFinishOrder = [];
   match.undoStack = []; // undo does not cross into a finished leg
-  match.currentPlayerIdx = (match.players.findIndex(p => p.id === mp.id) + 1) % match.players.length;
+  match.currentPlayerIdx = (match.players.findIndex(p => p.id === legWinnerId) + 1) % match.players.length;
   document.getElementById("currentPlayerName").textContent = currentMatchPlayer().name;
 
   updateLegLabel();
   renderScoreboard();
   renderThrows();
   renderLegLog();
-  showToast(`${mp.name} wins leg ${match.legNumber - 1}!`);
+  showToast(`${getPlayer(legWinnerId)?.name || ""} wins leg ${match.legNumber - 1}!`);
+}
+
+function announcePlacement(name, place) {
+  speak(`${name}, ${ordinal(place)} place.`, { pitch: 1.1, rate: 1.0 });
+}
+
+function computeStandings() {
+  const order = match.lastFinishOrder || [];
+  const rankOf = id => {
+    const i = order.indexOf(id);
+    return i === -1 ? 999 : i;
+  };
+  return [...match.players].sort(
+    (a, b) => b.legsWon - a.legsWon || rankOf(a.id) - rankOf(b.id)
+  );
 }
 
 function finishMatch(winnerMatchPlayer) {
@@ -742,22 +807,31 @@ function finishMatch(winnerMatchPlayer) {
   });
   savePlayers();
 
+  const standings = computeStandings();
+
   matchHistory.unshift({
     date: new Date().toISOString(),
     mode: match.startScore,
     legsBestOf: match.legsBestOf,
     winner: winnerMatchPlayer.name,
-    players: match.players.map(p => ({ name: p.name, legsWon: p.legsWon, average: computeLiveAverage(p) })),
+    standings: standings.map(p => p.name),
+    players: standings.map(p => ({ name: p.name, legsWon: p.legsWon, average: computeLiveAverage(p) })),
   });
   saveHistory();
 
   setTimeout(() => announceMatchWin(winnerMatchPlayer.name), 1500);
 
   document.getElementById("winnerTitle").textContent = "🏆 " + winnerMatchPlayer.name.toUpperCase() + " 🏆";
-  document.getElementById("winnerText").textContent =
-    `wins the match ${winnerMatchPlayer.legsWon} - ` +
-    match.players.filter(p => p.id !== winnerMatchPlayer.id).map(p => p.legsWon).join(", ") +
-    ` legs (${match.startScore}, Best of ${match.legsBestOf}).`;
+  // Full final standings (1st, 2nd, 3rd …) so the placement play-off shows.
+  const medals = ["🥇", "🥈", "🥉"];
+  document.getElementById("winnerText").innerHTML = standings
+    .map((p, i) => {
+      const badge = medals[i] || `${i + 1}.`;
+      return `<div class="standing-row"><span>${badge} ${ordinal(i + 1)}</span>` +
+             `<strong>${escapeHtml(p.name)}</strong>` +
+             `<span class="standing-avg">avg ${computeLiveAverage(p)}</span></div>`;
+    })
+    .join("");
   document.getElementById("winnerModal").classList.remove("hidden");
 
   renderScoreboard();
@@ -788,6 +862,16 @@ function renderStats() {
 }
 
 document.getElementById("statsPlayerSelect").addEventListener("change", renderStatCards);
+
+document.getElementById("resetStatsBtn").addEventListener("click", () => {
+  if (!confirm("Reset ALL statistics and match history for every player? This cannot be undone.")) return;
+  players.forEach(p => { p.stats = emptyStats(); });
+  matchHistory = [];
+  savePlayers();
+  saveHistory();
+  renderStats();
+  showToast("All statistics have been reset.");
+});
 
 function renderStatCards() {
   const container = document.getElementById("statsCards");

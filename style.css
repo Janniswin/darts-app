@@ -227,6 +227,20 @@ select:focus, input:focus { border-color: var(--gold); }
   color: var(--gold-light);
   font-weight: 800;
 }
+.player-card.out { opacity: 0.55; border-color: rgba(255,255,255,0.12); }
+.player-card.out::before {
+  content: "FINISHED";
+  position: absolute;
+  top: 8px; left: 0; right: 0;
+  font-size: 0.62rem;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  font-weight: 800;
+}
+.player-card .remaining.done {
+  color: var(--gold-light);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
 .player-card .name {
   font-size: 1.05rem;
   font-weight: 700;
@@ -520,6 +534,24 @@ select:focus, input:focus { border-color: var(--gold); }
   font-weight: 600;
 }
 .player-row .premove:hover { background: var(--board-red); color: #fff; }
+
+.reset-stats { margin-top: 22px; width: 100%; }
+
+/* Final standings list in the winner modal */
+.standing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  margin: 6px 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+.standing-row strong { flex: 1; text-align: left; color: var(--text); }
+.standing-row .standing-avg { color: var(--text-dim); font-size: 0.8rem; }
 
 /* ===== TOAST / MODAL ===== */
 .toast {
