@@ -52,92 +52,17 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
 }
 
-// ---------- Voice (English) ----------
-const VOICE_PREF_KEY = "fdc_voice_name";
-let englishVoice = null;
+// ---------- Voice ----------
+// The real recorded clips (voice/) cover every turn score plus win/bust, so
+// they handle almost everything. This minimal speechSynthesis fallback only
+// kicks in for the few announcements that have no recorded clip (e.g. the
+// 2nd/3rd place callouts) or if a clip fails to load - using whatever
+// default voice the device provides, no picker needed.
 let speechUnlocked = false;
-let availableVoices = [];
 
-// Default browser/OS voices are flat and robotic. Where available, prefer
-// the cloud-quality "Natural"/"Online"/"Neural"/"Enhanced"/"Premium" voices
-// - these are the ones that actually sound like a real person rather than
-// a 2005 text reader. Generic keyword match first (catches every neural
-// voice regardless of which name Microsoft/Google/Apple gave it), then a
-// short list of known-good named voices, then whatever's left.
-const QUALITY_KEYWORDS = /natural|online|neural|enhanced|premium|wavenet/i;
-const NAMED_FALLBACKS = [
-  /Google US English/i,
-  /Google UK English Male/i,
-  /Daniel/i,   // macOS/iOS built-in high-quality English voice
-  /Microsoft (David|Guy|Mark|Aria|Jenny)/i,
-];
-
-function autoBestVoice(pool) {
-  return (
-    pool.find(v => QUALITY_KEYWORDS.test(v.name)) ||
-    NAMED_FALLBACKS.map(p => pool.find(v => p.test(v.name))).find(Boolean) ||
-    pool[0] ||
-    null
-  );
-}
-
-function pickVoice() {
-  const voices = speechSynthesis.getVoices();
-  if (!voices.length) return;
-  availableVoices = voices;
-
-  const english = voices.filter(v => v.lang && v.lang.startsWith("en"));
-  const pool = english.length ? english : voices;
-
-  // Honour a saved manual choice if it still exists, else auto-pick best.
-  const savedName = localStorage.getItem(VOICE_PREF_KEY);
-  const saved = savedName && voices.find(v => v.name === savedName);
-  englishVoice = saved || autoBestVoice(pool) || voices[0] || null;
-
-  renderVoiceOptions();
-}
-
-// Populate the voice picker in the setup screen with the device's English
-// voices (best-sounding first) so the user can choose the most human one
-// their phone offers - no account or paid service required.
-function renderVoiceOptions() {
-  const select = document.getElementById("voiceSelect");
-  if (!select || !availableVoices.length) return;
-
-  const english = availableVoices.filter(v => v.lang && v.lang.startsWith("en"));
-  const pool = english.length ? english : availableVoices;
-  const best = autoBestVoice(pool);
-  // Sort: likely high-quality voices first, then alphabetical.
-  const sorted = [...pool].sort((a, b) => {
-    const qa = QUALITY_KEYWORDS.test(a.name) ? 0 : 1;
-    const qb = QUALITY_KEYWORDS.test(b.name) ? 0 : 1;
-    return qa - qb || a.name.localeCompare(b.name);
-  });
-
-  select.innerHTML = "";
-  sorted.forEach(v => {
-    const opt = document.createElement("option");
-    opt.value = v.name;
-    const tag = QUALITY_KEYWORDS.test(v.name) ? " ⭐" : "";
-    opt.textContent = `${v.name} (${v.lang})${tag}`;
-    select.appendChild(opt);
-  });
-  select.value = englishVoice ? englishVoice.name : (best ? best.name : "");
-}
-
-if ("speechSynthesis" in window) {
-  speechSynthesis.onvoiceschanged = pickVoice;
-  pickVoice();
-}
-
-// Mobile browsers (iOS Safari, Chrome on Android) only allow the speech
-// engine to start "warmed up" the first time speak() is called directly
-// inside a real user gesture (tap/click) - any setTimeout/delay in between
-// kills it. So we unlock once on the very first tap anywhere on the page.
 function unlockSpeech() {
   if (speechUnlocked || !("speechSynthesis" in window)) return;
   speechUnlocked = true;
-  pickVoice();
   const warmup = new SpeechSynthesisUtterance(" ");
   warmup.volume = 0; // silent, just opens the audio channel
   speechSynthesis.speak(warmup);
@@ -145,34 +70,16 @@ function unlockSpeech() {
 document.addEventListener("click", unlockSpeech, { once: true, capture: true });
 document.addEventListener("touchend", unlockSpeech, { once: true, capture: true });
 
-// Voice picker: remember the chosen voice and offer a Test button.
-document.getElementById("voiceSelect").addEventListener("change", e => {
-  const chosen = availableVoices.find(v => v.name === e.target.value);
-  if (chosen) {
-    englishVoice = chosen;
-    localStorage.setItem(VOICE_PREF_KEY, chosen.name);
-  }
-});
-document.getElementById("voiceTestBtn").addEventListener("click", () => {
-  unlockSpeech();
-  const prevToggle = document.getElementById("voiceToggle").value;
-  document.getElementById("voiceToggle").value = "on"; // force-on for the test
-  speak("One hundred and eighty! Game on!", { pitch: 1.25, rate: 1.0 });
-  document.getElementById("voiceToggle").value = prevToggle;
-});
-
 function speak(text, { pitch = 1.05, rate = 1.0 } = {}) {
   const voiceOn = document.getElementById("voiceToggle").value === "on";
   if (!voiceOn) return;
   if (!("speechSynthesis" in window)) return;
-  if (!englishVoice) pickVoice(); // voices may have loaded by now
 
   // Must run synchronously (no setTimeout) so mobile browsers still treat
   // this as part of the user gesture that triggered it.
   if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "en-US";
-  if (englishVoice) utter.voice = englishVoice;
   utter.rate = rate;
   utter.pitch = pitch;
   speechSynthesis.speak(utter);
